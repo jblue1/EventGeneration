@@ -15,4 +15,8 @@ process.demo = cms.EDAnalyzer('MyAnalyzer',
     ak4PFJets=cms.InputTag("ak4PFJets"),
     genParticles=cms.InputTag("genParticles"))
 
+process.TFileService = cms.Service("TFileService",
+    fileName = cms.string("out.root")
+    )
+
 process.p = cms.Path(process.demo)

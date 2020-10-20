@@ -24,6 +24,9 @@
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/one/EDAnalyzer.h"
 
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
+
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 
@@ -36,6 +39,9 @@
 #include "DataFormats/JetReco/interface/PFJetCollection.h"
 
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+
+#include "TTree.h"
+#include "TFile.h"
 //
 // class declaration
 //
@@ -65,6 +71,10 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       //edm::EDGetTokenT<TrackCollection> tracksToken_;  //used to select what tracks to read from configuration file
       edm::EDGetTokenT<reco::PFJetCollection> pfJetsToken_;
       edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticleToken_;
+
+      TTree* recoJetTree;
+
+      std::vector<Float_t> recoJetPt;
 };
 
 //
@@ -78,11 +88,10 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 //
 // constructors and destructor
 //
-MyAnalyzer::MyAnalyzer(const edm::ParameterSet& iConfig)
- :
-  //tracksToken_(consumes<TrackCollection>(iConfig.getUntrackedParameter<edm::InputTag>("tracks")))
-  pfJetsToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("ak4PFJets"))),
-  genParticleToken_(consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticles")))
+MyAnalyzer::MyAnalyzer(const edm::ParameterSet& iConfig) :
+    //tracksToken_(consumes<TrackCollection>(iConfig.getUntrackedParameter<edm::InputTag>("tracks")))
+    pfJetsToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("ak4PFJets"))),
+    genParticleToken_(consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticles")))
 
 {
    //now do what ever initialization is needed
@@ -105,25 +114,25 @@ MyAnalyzer::~MyAnalyzer()
 
 // ------------ method called for each event  ------------
 void
-MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
-{
-   using namespace edm;
-   std::cout << "You called analyze" << std::endl;
-   edm::Handle<reco::PFJetCollection> pfjetH;
-   //iEvent.getByLabel("ak4PFJets", pfjetH);
-   iEvent.getByToken(pfJetsToken_, pfjetH);
+MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+    recoJetPt.clear();
+    using namespace edm;
+    std::cout << "You called analyze" << std::endl;
+    edm::Handle<reco::PFJetCollection> pfjetH;
+    iEvent.getByToken(pfJetsToken_, pfjetH);
 
-   edm::Handle<std::vector<reco::GenParticle>> genParticles;
-   iEvent.getByToken(genParticleToken_, genParticles);
+    edm::Handle<std::vector<reco::GenParticle>> genParticles;
+    iEvent.getByToken(genParticleToken_, genParticles);
    
-   for (reco::PFJetCollection::const_iterator jet=pfjetH->begin(); jet != pfjetH->end(); ++jet) {
-      double pt = jet->pt();
-      std::cout << "Jet PT: " << pt << std::endl;
-   }
+    for (reco::PFJetCollection::const_iterator jet=pfjetH->begin(); jet != pfjetH->end(); ++jet) {
+        float pt = jet->pt();
+        std::cout << "Jet PT: " << pt << std::endl;
+        recoJetPt.push_back(pt);
+    }
 
-   for (std::vector<reco::GenParticle>::const_iterator particle_it = genParticles->begin(); particle_it != genParticles->end(); particle_it++) {
-      std::cout << "STATUS: " << particle_it->status() << std::endl;
-   }
+    for (std::vector<reco::GenParticle>::const_iterator particle_it = genParticles->begin(); particle_it != genParticles->end(); particle_it++) {
+        std::cout << "STATUS: " << particle_it->status() << std::endl;
+    }
 
 #ifdef THIS_IS_AN_EVENT_EXAMPLE
    Handle<ExampleData> pIn;
@@ -134,13 +143,19 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    ESHandle<SetupData> pSetup;
    iSetup.get<SetupRecord>().get(pSetup);
 #endif
+    
+    recoJetTree->Fill();
 }
 
 
 // ------------ method called once each job just before starting event loop  ------------
 void
-MyAnalyzer::beginJob()
-{
+MyAnalyzer::beginJob() {
+    edm::Service<TFileService> fs;
+    recoJetTree = fs->make<TTree>("recoJetTree", "recoJetTree");
+    recoJetTree->Branch("Pt", &recoJetPt);
+
+    
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
