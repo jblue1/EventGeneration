@@ -121,6 +121,10 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       std::cout << "Jet PT: " << pt << std::endl;
    }
 
+   for (std::vector<reco::GenParticle>::const_iterator particle_it = genParticles->begin(); particle_it != genParticles->end(); particle_it++) {
+      std::cout << "STATUS: " << particle_it->status() << std::endl;
+   }
+
 #ifdef THIS_IS_AN_EVENT_EXAMPLE
    Handle<ExampleData> pIn;
    iEvent.getByLabel("example",pIn);
