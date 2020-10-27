@@ -9,7 +9,7 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.source = cms.Source("PoolSource",
                                 # replace 'myfile.root' with the source file you want to use
                                 fileNames = cms.untracked.vstring(
-                                'file:step3_RAW2DIGI_L1Reco_RECO_RECOSIM_EI_PAT_inAODSIM.root')
+                                'file:TTbar_13TeV_TuneCUETP8M1_2018_RECOSIM_2_inAODSIM.root')
                             )
 
 process.demo = cms.EDAnalyzer('MyAnalyzer', 

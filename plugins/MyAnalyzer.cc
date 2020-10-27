@@ -87,6 +87,9 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       std::vector<Float_t> pfJetPy;
       std::vector<Float_t> pfJetPz;
       std::vector<Float_t> pfJetE;
+      std::vector<Float_t> pfJetPhotonEnergy;
+      std::vector<Float_t> pfJetElectronEnergy;
+      std::vector<Float_t> pfJetMuonEnergy;
 
       std::vector<Float_t> pfJetCHSPt;
       std::vector<Float_t> pfJetCHSEta;
@@ -167,6 +170,9 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     pfJetPy.clear();
     pfJetPz.clear();
     pfJetE.clear();
+    pfJetPhotonEnergy.clear();
+    pfJetElectronEnergy.clear();
+    pfJetMuonEnergy.clear();
 
     pfJetCHSPt.clear();
     pfJetCHSEta.clear();
@@ -210,8 +216,6 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.getByToken(partonsToken_, partonsH);
    
     for (reco::PFJetCollection::const_iterator jet=pfJetH->begin(); jet != pfJetH->end(); ++jet) {
-        //float pt = jet->pt();
-        //std::cout << "Jet PT: " << pt << std::endl;
         pfJetPt.push_back(jet->pt());
         pfJetEta.push_back(jet->eta());
         pfJetPhi.push_back(jet->phi());
@@ -219,6 +223,9 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
         pfJetPy.push_back(jet->py());
         pfJetPz.push_back(jet->px());
         pfJetE.push_back(jet->energy());
+        pfJetPhotonEnergy.push_back(jet->photonEnergy());
+        pfJetElectronEnergy.push_back(jet->electronEnergy());
+        pfJetMuonEnergy.push_back(jet->muonEnergy());
     }
 
     for (reco::PFJetCollection::const_iterator jet=pfJetCHSH->begin(); jet != pfJetCHSH->end(); ++jet) {
@@ -243,7 +250,6 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
     for (std::vector<reco::GenParticle>::const_iterator particle = partonsH->begin(); particle != partonsH->end(); particle++) {
         if (particle->status() > 69 && particle->status() < 80) {
-            std::cout << "STATUS: " << particle->status() << std::endl;
             partonPt.push_back(particle->pt());
             partonEta.push_back(particle->eta());
             partonPhi.push_back(particle->phi());
@@ -283,6 +289,11 @@ MyAnalyzer::beginJob() {
     eventTree->Branch("pfJetPy", &pfJetPy);
     eventTree->Branch("pfJetPz", &pfJetPz);
     eventTree->Branch("pfJetE", &pfJetE);
+    eventTree->Branch("pfJetPhotonEnergy", &pfJetPhotonEnergy);
+    eventTree->Branch("pfJetElectronEnergy", &pfJetElectronEnergy);
+    eventTree->Branch("pfJetMuonEnergy", &pfJetMuonEnergy);
+    
+
 
     eventTree->Branch("pfJetCHSPt", &pfJetCHSPt);
     eventTree->Branch("pfJetCHSEta", &pfJetCHSEta);
