@@ -117,8 +117,11 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       std::vector<Int_t> partonPdgId;
       std::vector<Int_t> partonStatus;
 
+      std::vector<Float_t> hadronPx;
+      std::vector<Float_t> hadronPy;
+      std::vector<Float_t> hadronPz;
+      std::vector<Float_t> hadronE;
 
-        
 };
 
 //
@@ -200,6 +203,11 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     partonPdgId.clear();
     partonStatus.clear();
 
+    hadronPx.clear();
+    hadronPy.clear();
+    hadronPz.clear();
+    hadronE.clear();
+
 
     using namespace edm;
     std::cout << "You called analyze" << std::endl;
@@ -248,6 +256,7 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
         genJetE.push_back(jet->energy());
     }
 
+    std::set<std::vector<Float_t>> hadrons;
     for (std::vector<reco::GenParticle>::const_iterator particle = partonsH->begin(); particle != partonsH->end(); particle++) {
         if (particle->status() > 69 && particle->status() < 80) {
             partonPt.push_back(particle->pt());
@@ -259,7 +268,25 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
             partonE.push_back(particle->energy());
             partonPdgId.push_back(particle->pdgId());
             partonStatus.push_back(particle->status());
+            int numDaught = particle->numberOfDaughters();
+            for (int j=0; j < numDaught; j++) {
+                const reco::Candidate* d = particle->daughter(j);
+                std::vector<Float_t> p4;
+                p4.push_back(d->px());
+                p4.push_back(d->py());
+                p4.push_back(d->pz());
+                p4.push_back(d->energy());
+                hadrons.insert(p4);
+            }
         }
+    }
+    std::cout << "Num unique hadrons: " << hadrons.size() << std::endl;
+
+    for (auto it = hadrons.begin(); it != hadrons.end(); it++) {
+        hadronPx.push_back((*it)[0]);
+        hadronPy.push_back((*it)[1]);
+        hadronPz.push_back((*it)[2]);
+        hadronE.push_back((*it)[3]);
     }
 
 #ifdef THIS_IS_AN_EVENT_EXAMPLE
@@ -320,6 +347,11 @@ MyAnalyzer::beginJob() {
     eventTree->Branch("partonE", &partonE);
     eventTree->Branch("partonPdgId", &partonPdgId);
     eventTree->Branch("partonStatus", &partonStatus);
+
+    eventTree->Branch("hadronPx", &hadronPx);
+    eventTree->Branch("hadronPy", &hadronPx);
+    eventTree->Branch("hadronPz", &hadronPx);
+    eventTree->Branch("hadronE", &hadronPx);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
