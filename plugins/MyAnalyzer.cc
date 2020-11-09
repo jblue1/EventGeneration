@@ -5,10 +5,10 @@
 //
 /**\class MyAnalyzer MyAnalyzer.cc analyzer/MyAnalyzer/plugins/MyAnalyzer.cc
 
- Description: [one line class summary]
+ Description: Save 4-momenta and related information for partons, genJets and recoJets
 
  Implementation:
-     [Notes on implementation]
+     Saving gen particles with pythia status codes 70-79 as partons to later be clustered into jets
 */
 //
 // Original Author:  
