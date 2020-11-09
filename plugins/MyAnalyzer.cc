@@ -349,9 +349,9 @@ MyAnalyzer::beginJob() {
     eventTree->Branch("partonStatus", &partonStatus);
 
     eventTree->Branch("hadronPx", &hadronPx);
-    eventTree->Branch("hadronPy", &hadronPx);
-    eventTree->Branch("hadronPz", &hadronPx);
-    eventTree->Branch("hadronE", &hadronPx);
+    eventTree->Branch("hadronPy", &hadronPy);
+    eventTree->Branch("hadronPz", &hadronPz);
+    eventTree->Branch("hadronE", &hadronE);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
