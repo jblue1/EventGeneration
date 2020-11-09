@@ -210,7 +210,6 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
 
     using namespace edm;
-    std::cout << "You called analyze" << std::endl;
     edm::Handle<reco::PFJetCollection> pfJetH;
     iEvent.getByToken(pfJetsToken_, pfJetH);
 
@@ -280,7 +279,6 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
             }
         }
     }
-    std::cout << "Num unique hadrons: " << hadrons.size() << std::endl;
 
     for (auto it = hadrons.begin(); it != hadrons.end(); it++) {
         hadronPx.push_back((*it)[0]);
