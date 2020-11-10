@@ -111,8 +111,8 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       std::vector<Float_t> hadronPy;
       std::vector<Float_t> hadronPz;
       std::vector<Float_t> hadronE;
-      std::vector<Float_t> hadronPdgId;
-      std::vector<Float_t> hadronStatus;
+      std::vector<Int_t> hadronPdgId;
+      std::vector<Int_t> hadronStatus;
 
 };
 
@@ -276,7 +276,7 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
         hadronPz.push_back((*it)->pz());
         hadronE.push_back((*it)->energy());
         hadronPdgId.push_back((*it)->pdgId());
-        hadronPdgId.push_back((*it)->status());
+        hadronStatus.push_back((*it)->status());
     }
 
 #ifdef THIS_IS_AN_EVENT_EXAMPLE
@@ -342,6 +342,11 @@ MyAnalyzer::beginJob() {
     eventTree->Branch("hadronPy", &hadronPy);
     eventTree->Branch("hadronPz", &hadronPz);
     eventTree->Branch("hadronE", &hadronE);
+    eventTree->Branch("hadronPt", &hadronPt);
+    eventTree->Branch("hadronEta", &hadronEta);
+    eventTree->Branch("hadronPhi", &hadronPhi);
+    eventTree->Branch("hadronPdgId", &hadronPdgId);
+    eventTree->Branch("hadronStatus", &hadronStatus);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
