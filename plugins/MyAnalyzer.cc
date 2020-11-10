@@ -11,10 +11,7 @@
      Saving gen particles with pythia status codes 70-79 as partons to later be clustered into jets
 */
 //
-// Original Author:  
-//         Created:  Tue, 20 Oct 2020 03:57:13 GMT
-//
-//
+//   Created:  Tue, 20 Oct 2020 03:57:13 GMT
 
 
 // system include files
@@ -46,15 +43,6 @@
 
 #include "TTree.h"
 #include "TFile.h"
-//
-// class declaration
-//
-
-// If the analyzer does not use TFileService, please remove
-// the template argument to the base class so the class inherits
-// from  edm::one::EDAnalyzer<>
-// This will improve performance in multithreaded jobs.
-
 
 using reco::TrackCollection;
 
@@ -72,7 +60,6 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       virtual void endJob() override;
 
       // ----------member data ---------------------------
-      //edm::EDGetTokenT<TrackCollection> tracksToken_;  //used to select what tracks to read from configuration file
       edm::EDGetTokenT<reco::PFJetCollection> pfJetsToken_;
       edm::EDGetTokenT<reco::PFJetCollection> pfJetsCHSToken_;
       edm::EDGetTokenT<reco::GenJetCollection> genJetsToken_;
@@ -124,19 +111,9 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 
 };
 
-//
-// constants, enums and typedefs
-//
 
-//
-// static data member definitions
-//
-
-//
 // constructors and destructor
-//
 MyAnalyzer::MyAnalyzer(const edm::ParameterSet& iConfig) :
-    //tracksToken_(consumes<TrackCollection>(iConfig.getUntrackedParameter<edm::InputTag>("tracks")))
     pfJetsToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("ak4PFJets"))),
     pfJetsCHSToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("ak4PFJets"))),
     genJetsToken_(consumes<reco::GenJetCollection>(iConfig.getParameter<edm::InputTag>("ak4GenJets"))),
@@ -166,6 +143,7 @@ MyAnalyzer::~MyAnalyzer()
 void
 MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
+    // clear all vectors before processing each event
     pfJetPt.clear();
     pfJetEta.clear();
     pfJetPhi.clear();
@@ -366,12 +344,6 @@ MyAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addDefault(desc);
-
-  //Specify that only 'tracks' is allowed
-  //To use, remove the default given above and uncomment below
-  //ParameterSetDescription desc;
-  //desc.addUntracked<edm::InputTag>("tracks","ctfWithMaterialTracks");
-  //descriptions.addDefault(desc);
 }
 
 //define this as a plug-in
