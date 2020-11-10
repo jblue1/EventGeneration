@@ -104,10 +104,15 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       std::vector<Int_t> partonPdgId;
       std::vector<Int_t> partonStatus;
 
+      std::vector<Float_t> hadronPt;
+      std::vector<Float_t> hadronEta;
+      std::vector<Float_t> hadronPhi;
       std::vector<Float_t> hadronPx;
       std::vector<Float_t> hadronPy;
       std::vector<Float_t> hadronPz;
       std::vector<Float_t> hadronE;
+      std::vector<Float_t> hadronPdgId;
+      std::vector<Float_t> hadronStatus;
 
 };
 
@@ -118,7 +123,6 @@ MyAnalyzer::MyAnalyzer(const edm::ParameterSet& iConfig) :
     pfJetsCHSToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("ak4PFJets"))),
     genJetsToken_(consumes<reco::GenJetCollection>(iConfig.getParameter<edm::InputTag>("ak4GenJets"))),
     partonsToken_(consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticles")))
-
 
 {
    //now do what ever initialization is needed
@@ -181,10 +185,15 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     partonPdgId.clear();
     partonStatus.clear();
 
+    hadronPt.clear();
+    hadronEta.clear();
+    hadronPhi.clear();
     hadronPx.clear();
     hadronPy.clear();
     hadronPz.clear();
     hadronE.clear();
+    hadronPdgId.clear();
+    hadronStatus.clear();
 
 
     using namespace edm;
@@ -234,6 +243,8 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     }
 
     std::set<std::vector<Float_t>> hadrons;
+    std::set<const reco::Candidate*> hadronPointers;
+    int numHadrons = 0;
     for (std::vector<reco::GenParticle>::const_iterator particle = partonsH->begin(); particle != partonsH->end(); particle++) {
         if (particle->status() > 69 && particle->status() < 80) {
             partonPt.push_back(particle->pt());
@@ -248,21 +259,24 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
             int numDaught = particle->numberOfDaughters();
             for (int j=0; j < numDaught; j++) {
                 const reco::Candidate* d = particle->daughter(j);
-                std::vector<Float_t> p4;
-                p4.push_back(d->px());
-                p4.push_back(d->py());
-                p4.push_back(d->pz());
-                p4.push_back(d->energy());
-                hadrons.insert(p4);
+                hadronPointers.insert(d);
+                numHadrons++;
             }
         }
     }
+    std::cout << "Num Hadrons 1: " << hadrons.size() << std::endl;
+    std::cout << "Num Hadrons 2: " << hadronPointers.size() << std::endl;
 
-    for (auto it = hadrons.begin(); it != hadrons.end(); it++) {
-        hadronPx.push_back((*it)[0]);
-        hadronPy.push_back((*it)[1]);
-        hadronPz.push_back((*it)[2]);
-        hadronE.push_back((*it)[3]);
+    for (auto it = hadronPointers.begin(); it != hadronPointers.end(); it++) {
+        hadronPt.push_back((*it)->pt());
+        hadronEta.push_back((*it)->eta());
+        hadronPhi.push_back((*it)->phi());
+        hadronPx.push_back((*it)->px());
+        hadronPy.push_back((*it)->py());
+        hadronPz.push_back((*it)->pz());
+        hadronE.push_back((*it)->energy());
+        hadronPdgId.push_back((*it)->pdgId());
+        hadronPdgId.push_back((*it)->status());
     }
 
 #ifdef THIS_IS_AN_EVENT_EXAMPLE
