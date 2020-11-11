@@ -16,6 +16,7 @@
 
 // system include files
 #include <memory>
+#include <cmath>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -103,6 +104,8 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       std::vector<Float_t> partonE;
       std::vector<Int_t> partonPdgId;
       std::vector<Int_t> partonStatus;
+      std::vector<Float_t> partonAvgDeltaR;
+      std::vector<Float_t> partonNumDaught;
 
       std::vector<Float_t> hadronPt;
       std::vector<Float_t> hadronEta;
@@ -184,6 +187,8 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     partonE.clear();
     partonPdgId.clear();
     partonStatus.clear();
+    partonAvgDeltaR.clear();
+    partonNumDaught.clear();
 
     hadronPt.clear();
     hadronEta.clear();
@@ -257,15 +262,22 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
             partonPdgId.push_back(particle->pdgId());
             partonStatus.push_back(particle->status());
             int numDaught = particle->numberOfDaughters();
+            partonNumDaught.push_back(numDaught);
+            float partonEta = particle->eta();
+            float partonPhi = particle->phi();
+            float totalDeltaR = 0;
             for (int j=0; j < numDaught; j++) {
                 const reco::Candidate* d = particle->daughter(j);
+                float hadronEta = d->eta();
+                float hadronPhi = d->phi();
                 hadronPointers.insert(d);
                 numHadrons++;
+                float deltaR = sqrt(pow(hadronEta - partonEta,2) + pow(hadronPhi - partonPhi, 2));
+                totalDeltaR += deltaR;
             }
+            partonAvgDeltaR.push_back(totalDeltaR/numDaught);
         }
     }
-    std::cout << "Num Hadrons 1: " << hadrons.size() << std::endl;
-    std::cout << "Num Hadrons 2: " << hadronPointers.size() << std::endl;
 
     for (auto it = hadronPointers.begin(); it != hadronPointers.end(); it++) {
         hadronPt.push_back((*it)->pt());
@@ -337,6 +349,8 @@ MyAnalyzer::beginJob() {
     eventTree->Branch("partonE", &partonE);
     eventTree->Branch("partonPdgId", &partonPdgId);
     eventTree->Branch("partonStatus", &partonStatus);
+    eventTree->Branch("partonAvgDeltaR", &partonAvgDeltaR);
+    eventTree->Branch("partonNumDaught", &partonNumDaught);
 
     eventTree->Branch("hadronPx", &hadronPx);
     eventTree->Branch("hadronPy", &hadronPy);
