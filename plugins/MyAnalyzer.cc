@@ -247,11 +247,12 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
         genJetE.push_back(jet->energy());
     }
 
-    std::set<std::vector<Float_t>> hadrons;
+    std::set<std::vector<Float_t>> partons;
     std::set<const reco::Candidate*> hadronPointers;
     int numHadrons = 0;
     for (std::vector<reco::GenParticle>::const_iterator particle = partonsH->begin(); particle != partonsH->end(); particle++) {
-        if (particle->status() > 69 && particle->status() < 80) {
+        //if (particle->status() > 69 && particle->status() < 80) {
+        if (particle->status() == 71) {
             partonPt.push_back(particle->pt());
             partonEta.push_back(particle->eta());
             partonPhi.push_back(particle->phi());
