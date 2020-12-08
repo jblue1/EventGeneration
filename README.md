@@ -15,4 +15,4 @@ The rest of this repo is a CMSSW module for producing small ROOT files containin
 the module, first run ```scram b``` in the top level directory. Then move into the /python directory, and run ```touch filelist.txt```. Open this new file in your favorite
 text editor, and add the files generated in the above step in the format ```file:path/to/your/file.root``` with each file on its own line. Then run
 ```cmsRun ConfFile_cfg.py``` which will produce a file out.root, containing a ROOT tree ("eventTree") with branches containing various variables (transverse momentum,
-psuedo-rapidity, etc) of the jets and partons in the generated events. Each entry represents a single event. 
+psuedo-rapidity, etc) of the jets and partons in the generated events. Each entry represents a single jet. 
