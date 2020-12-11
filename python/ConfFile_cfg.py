@@ -29,7 +29,7 @@ process.demo = cms.EDAnalyzer('MyAnalyzer',
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 # how many events to process (-1 = all)
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10000))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
 
 process.p = cms.Path(process.demo)
