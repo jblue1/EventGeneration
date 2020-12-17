@@ -47,6 +47,60 @@
 
 using reco::TrackCollection;
 
+
+/**
+ * Recursively traverse through the mother of each particle until 
+ * you find a parton, or a particle has no mother. Save the found
+ * partons in a set.
+ *
+ * @param original - current particle in the traversal
+ * @param partonSet - set to save all of the found partons to
+ */
+void findPartonMother(const reco::Candidate *original, std::set<const reco::Candidate*> &partonSet) {
+    int numMoms = original->numberOfMothers();
+    if (numMoms == 0) return;
+
+    for (int j=0; j < numMoms; j++) {
+        const reco::Candidate *mom = original->mother(j);
+        int status = mom->status();
+        if (status < 70 || status > 80) {
+            findPartonMother(mom, partonSet);
+        }
+        else {
+            partonSet.insert(mom);
+        }
+
+    }
+    return;
+}
+
+/**
+ * Overload of above function for different particle type.
+ *
+ * Looping through the gen particles in the event yields
+ * objects of the type reco::GenParticle. However, using the
+ * .mother() function returns objects of the type
+ * const reco::Candidate*, which necessitates the need for
+ * these two functions.
+ */
+void findPartonMother(reco::GenParticle original, std::set<const reco::Candidate*> &partonSet) {
+    int numMoms = original.numberOfMothers();
+    if (numMoms == 0) return;
+
+    for (int j=0; j < numMoms; j++) {
+        const reco::Candidate *mom = original.mother(j);
+        int status = mom->status();
+        if (status < 70 || status > 80) {
+            findPartonMother(mom, partonSet);
+        }
+        else {
+            partonSet.insert(mom);
+        }
+    }
+    return;
+}
+
+
 class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
    public:
       explicit MyAnalyzer(const edm::ParameterSet&);
@@ -66,8 +120,10 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       edm::EDGetTokenT<reco::GenJetCollection> genJetsToken_;
       edm::EDGetTokenT<std::vector<reco::GenParticle>> partonsToken_;
 
+      // define tree
       TTree* eventTree;
 
+      // define containers to be used for tree branches
       std::vector<Float_t> pfJetPt;
       std::vector<Float_t> pfJetEta;
       std::vector<Float_t> pfJetPhi;
@@ -78,14 +134,6 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       std::vector<Float_t> pfJetPhotonEnergy;
       std::vector<Float_t> pfJetElectronEnergy;
       std::vector<Float_t> pfJetMuonEnergy;
-
-      std::vector<Float_t> pfJetCHSPt;
-      std::vector<Float_t> pfJetCHSEta;
-      std::vector<Float_t> pfJetCHSPhi;
-      std::vector<Float_t> pfJetCHSPx;
-      std::vector<Float_t> pfJetCHSPy;
-      std::vector<Float_t> pfJetCHSPz;
-      std::vector<Float_t> pfJetCHSE;
 
       std::vector<Float_t> genJetPt;
       std::vector<Float_t> genJetEta;
@@ -104,20 +152,7 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       std::vector<Float_t> partonE;
       std::vector<Int_t> partonPdgId;
       std::vector<Int_t> partonStatus;
-      std::vector<Float_t> partonAvgDeltaR;
-      std::vector<Float_t> partonNumDaught;
-
-      std::vector<Float_t> hadronPt;
-      std::vector<Float_t> hadronEta;
-      std::vector<Float_t> hadronPhi;
-      std::vector<Float_t> hadronPx;
-      std::vector<Float_t> hadronPy;
-      std::vector<Float_t> hadronPz;
-      std::vector<Float_t> hadronE;
-      std::vector<Int_t> hadronPdgId;
-      std::vector<Int_t> hadronStatus;
-
-};
+      };
 
 
 // constructors and destructor
@@ -162,14 +197,6 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     pfJetElectronEnergy.clear();
     pfJetMuonEnergy.clear();
 
-    pfJetCHSPt.clear();
-    pfJetCHSEta.clear();
-    pfJetCHSPhi.clear();
-    pfJetCHSPx.clear();
-    pfJetCHSPy.clear();
-    pfJetCHSPz.clear();
-    pfJetCHSE.clear();
-
     genJetPt.clear();
     genJetEta.clear();
     genJetPhi.clear();
@@ -187,33 +214,19 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     partonE.clear();
     partonPdgId.clear();
     partonStatus.clear();
-    partonAvgDeltaR.clear();
-    partonNumDaught.clear();
-
-    hadronPt.clear();
-    hadronEta.clear();
-    hadronPhi.clear();
-    hadronPx.clear();
-    hadronPy.clear();
-    hadronPz.clear();
-    hadronE.clear();
-    hadronPdgId.clear();
-    hadronStatus.clear();
-
 
     using namespace edm;
     edm::Handle<reco::PFJetCollection> pfJetH;
     iEvent.getByToken(pfJetsToken_, pfJetH);
 
-    edm::Handle<reco::PFJetCollection> pfJetCHSH;
-    iEvent.getByToken(pfJetsCHSToken_, pfJetCHSH);
-
     edm::Handle<reco::GenJetCollection> genJetH;
     iEvent.getByToken(genJetsToken_, genJetH);
 
-    edm::Handle<std::vector<reco::GenParticle>> partonsH;
-    iEvent.getByToken(partonsToken_, partonsH);
+    edm::Handle<std::vector<reco::GenParticle>> genParticlesH;
+    iEvent.getByToken(partonsToken_, genParticlesH);
    
+    
+    // loop through reco jets and save 4-momenta info
     for (reco::PFJetCollection::const_iterator jet=pfJetH->begin(); jet != pfJetH->end(); ++jet) {
         pfJetPt.push_back(jet->pt());
         pfJetEta.push_back(jet->eta());
@@ -227,16 +240,8 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
         pfJetMuonEnergy.push_back(jet->muonEnergy());
     }
 
-    for (reco::PFJetCollection::const_iterator jet=pfJetCHSH->begin(); jet != pfJetCHSH->end(); ++jet) {
-        pfJetCHSPt.push_back(jet->pt());
-        pfJetCHSEta.push_back(jet->eta());
-        pfJetCHSPhi.push_back(jet->phi());
-        pfJetCHSPx.push_back(jet->px());
-        pfJetCHSPy.push_back(jet->py());
-        pfJetCHSPz.push_back(jet->px());
-        pfJetCHSE.push_back(jet->energy());
-    }
 
+    // loop through gen jets and save 4-momenta info
     for (reco::GenJetCollection::const_iterator jet=genJetH->begin(); jet != genJetH->end(); ++jet) {
         genJetPt.push_back(jet->pt());
         genJetEta.push_back(jet->eta());
@@ -246,51 +251,34 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
         genJetPz.push_back(jet->px());
         genJetE.push_back(jet->energy());
     }
+    
 
-    std::set<std::vector<Float_t>> partons;
-    std::set<const reco::Candidate*> hadronPointers;
-    int numHadrons = 0;
-    for (std::vector<reco::GenParticle>::const_iterator particle = partonsH->begin(); particle != partonsH->end(); particle++) {
-        //if (particle->status() > 69 && particle->status() < 80) {
-        if (particle->status() == 71) {
-            partonPt.push_back(particle->pt());
-            partonEta.push_back(particle->eta());
-            partonPhi.push_back(particle->phi());
-            partonPx.push_back(particle->px());
-            partonPy.push_back(particle->py());
-            partonPz.push_back(particle->pz());
-            partonE.push_back(particle->energy());
-            partonPdgId.push_back(particle->pdgId());
-            partonStatus.push_back(particle->status());
-            int numDaught = particle->numberOfDaughters();
-            partonNumDaught.push_back(numDaught);
-            float partonEta = particle->eta();
-            float partonPhi = particle->phi();
-            float totalDeltaR = 0;
-            for (int j=0; j < numDaught; j++) {
-                const reco::Candidate* d = particle->daughter(j);
-                float hadronEta = d->eta();
-                float hadronPhi = d->phi();
-                hadronPointers.insert(d);
-                numHadrons++;
-                float deltaR = sqrt(pow(hadronEta - partonEta,2) + pow(hadronPhi - partonPhi, 2));
-                totalDeltaR += deltaR;
-            }
-            partonAvgDeltaR.push_back(totalDeltaR/numDaught);
+    std::set<const reco::Candidate*> partonSet;
+
+    // loop through stable gen particles, recursivly backtrack through the
+    // event and save the found partons to a set
+    for (std::vector<reco::GenParticle>::const_iterator particle = genParticlesH->begin(); particle != genParticlesH->end(); particle++) {
+        const reco::GenParticle stableParticle = *particle;
+        if (stableParticle.status() == 1) {
+            findPartonMother(stableParticle, partonSet);
         }
     }
 
-    for (auto it = hadronPointers.begin(); it != hadronPointers.end(); it++) {
-        hadronPt.push_back((*it)->pt());
-        hadronEta.push_back((*it)->eta());
-        hadronPhi.push_back((*it)->phi());
-        hadronPx.push_back((*it)->px());
-        hadronPy.push_back((*it)->py());
-        hadronPz.push_back((*it)->pz());
-        hadronE.push_back((*it)->energy());
-        hadronPdgId.push_back((*it)->pdgId());
-        hadronStatus.push_back((*it)->status());
+    // iterate through the set of partons and save 4-momenta information
+    for (std::set<const reco::Candidate*>::iterator it = partonSet.begin(); it != partonSet.end(); it++){
+        const reco::Candidate *parton = *it;
+        partonPt.push_back(parton->pt());
+        partonEta.push_back(parton->eta());
+        partonPhi.push_back(parton->phi());
+        partonPx.push_back(parton->px());
+        partonPy.push_back(parton->py());
+        partonPz.push_back(parton->pz());
+        partonE.push_back(parton->energy());
+        partonPdgId.push_back(parton->pdgId());
+        partonStatus.push_back(parton->status());
+
     }
+
 
 #ifdef THIS_IS_AN_EVENT_EXAMPLE
    Handle<ExampleData> pIn;
@@ -323,16 +311,6 @@ MyAnalyzer::beginJob() {
     eventTree->Branch("pfJetElectronEnergy", &pfJetElectronEnergy);
     eventTree->Branch("pfJetMuonEnergy", &pfJetMuonEnergy);
     
-
-
-    eventTree->Branch("pfJetCHSPt", &pfJetCHSPt);
-    eventTree->Branch("pfJetCHSEta", &pfJetCHSEta);
-    eventTree->Branch("pfJetCHSPhi", &pfJetCHSPhi);
-    eventTree->Branch("pfJetCHSPx", &pfJetCHSPx);
-    eventTree->Branch("pfJetCHSPy", &pfJetCHSPy);
-    eventTree->Branch("pfJetCHSPz", &pfJetCHSPz);
-    eventTree->Branch("pfJetCHSE", &pfJetCHSE);
-
     eventTree->Branch("genJetPt", &genJetPt);
     eventTree->Branch("genJetEta", &genJetEta);
     eventTree->Branch("genJetPhi", &genJetPhi);
@@ -350,19 +328,8 @@ MyAnalyzer::beginJob() {
     eventTree->Branch("partonE", &partonE);
     eventTree->Branch("partonPdgId", &partonPdgId);
     eventTree->Branch("partonStatus", &partonStatus);
-    eventTree->Branch("partonAvgDeltaR", &partonAvgDeltaR);
-    eventTree->Branch("partonNumDaught", &partonNumDaught);
 
-    eventTree->Branch("hadronPx", &hadronPx);
-    eventTree->Branch("hadronPy", &hadronPy);
-    eventTree->Branch("hadronPz", &hadronPz);
-    eventTree->Branch("hadronE", &hadronE);
-    eventTree->Branch("hadronPt", &hadronPt);
-    eventTree->Branch("hadronEta", &hadronEta);
-    eventTree->Branch("hadronPhi", &hadronPhi);
-    eventTree->Branch("hadronPdgId", &hadronPdgId);
-    eventTree->Branch("hadronStatus", &hadronStatus);
-}
+    }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void
