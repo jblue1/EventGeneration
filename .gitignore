@@ -1,0 +1,15 @@
+# All run directories and root files
+*.root
+run*
+
+# test directory - I'm not using it
+test*
+
+# Text file with all the root files for the analyzer
+*filelist.txt
+
+# text file containing random seeds in the /example directory
+*seeds.txt
+
+# __init__.py/pyc in the analyzer
+*__init__*
