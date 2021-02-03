@@ -48,7 +48,7 @@ process.configurationMetadata = cms.untracked.PSet(
 # random number seed
 rand_seed = random.randrange(10**9)
 with open("seeds.txt", "a") as f:
-   f.write("Gen Seed: {}".format(rand_seed)) 
+   f.write("Gen Seed: {}\n".format(rand_seed)) 
 process.RandomNumberGeneratorService.generator.initialSeed = rand_seed 
 # Output definition
 

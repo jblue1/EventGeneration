@@ -35,7 +35,7 @@ process.maxEvents = cms.untracked.PSet(
 # random number seed
 rand_seed = random.randrange(10**9)
 with open("seeds.txt", "a") as f:
-   f.write("Reco Seed: {}".format(rand_seed)) 
+   f.write("Reco Seed: {}\n".format(rand_seed)) 
 process.RandomNumberGeneratorService.generator.initialSeed = rand_seed 
 
 
