@@ -36,6 +36,8 @@
 #include "DataFormats/JetReco/interface/PFJet.h"
 #include "DataFormats/JetReco/interface/PFJetCollection.h"
 
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
+
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
 
@@ -119,6 +121,7 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       edm::EDGetTokenT<reco::PFJetCollection> pfJetsCHSToken_;
       edm::EDGetTokenT<reco::GenJetCollection> genJetsToken_;
       edm::EDGetTokenT<std::vector<reco::GenParticle>> partonsToken_;
+      edm::EDGetTokenT<reco::PFCandidateCollection> pfCandsToken_;
 
       // define tree
       TTree* eventTree;
@@ -134,6 +137,14 @@ class MyAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       std::vector<Float_t> pfJetPhotonEnergy;
       std::vector<Float_t> pfJetElectronEnergy;
       std::vector<Float_t> pfJetMuonEnergy;
+
+      std::vector<Float_t> pfCandPt;
+      std::vector<Float_t> pfCandEta;
+      std::vector<Float_t> pfCandPhi;
+      std::vector<Float_t> pfCandPx;
+      std::vector<Float_t> pfCandPy;
+      std::vector<Float_t> pfCandPz;
+      std::vector<Float_t> pfCandE;
 
       std::vector<Float_t> genJetPt;
       std::vector<Float_t> genJetEta;
@@ -160,7 +171,9 @@ MyAnalyzer::MyAnalyzer(const edm::ParameterSet& iConfig) :
     pfJetsToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("ak4PFJets"))),
     pfJetsCHSToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("ak4PFJets"))),
     genJetsToken_(consumes<reco::GenJetCollection>(iConfig.getParameter<edm::InputTag>("ak4GenJets"))),
-    partonsToken_(consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticles")))
+    partonsToken_(consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticles"))),
+    pfCandsToken_(consumes<reco::PFCandidateCollection>(iConfig.getParameter<edm::InputTag>("particleFlow")))
+
 
 {
    //now do what ever initialization is needed
@@ -197,6 +210,14 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     pfJetElectronEnergy.clear();
     pfJetMuonEnergy.clear();
 
+    pfCandPt.clear();
+    pfCandEta.clear();
+    pfCandPhi.clear();
+    pfCandPx.clear();
+    pfCandPy.clear();
+    pfCandPz.clear();
+    pfCandE.clear();
+
     genJetPt.clear();
     genJetEta.clear();
     genJetPhi.clear();
@@ -219,6 +240,9 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     edm::Handle<reco::PFJetCollection> pfJetH;
     iEvent.getByToken(pfJetsToken_, pfJetH);
 
+    edm::Handle<reco::PFCandidateCollection> pfCandsH;
+    iEvent.getByToken(pfCandsToken_, pfCandsH);
+
     edm::Handle<reco::GenJetCollection> genJetH;
     iEvent.getByToken(genJetsToken_, genJetH);
 
@@ -238,6 +262,17 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
         pfJetPhotonEnergy.push_back(jet->photonEnergy());
         pfJetElectronEnergy.push_back(jet->electronEnergy());
         pfJetMuonEnergy.push_back(jet->muonEnergy());
+    }
+
+    // loop through PF Candidates and save 4-momenta info
+    for (reco::PFCandidateCollection::const_iterator particle=pfCandsH->begin(); particle != pfCandsH->end(); ++particle) {
+        pfCandPt.push_back(particle->pt());
+        pfCandEta.push_back(particle->Eta());
+        pfCandPhi.push_back(particle->Phi());
+        pfCandPx.push_back(particle->px());
+        pfCandPy.push_back(particle->py());
+        pfCandPz.push_back(particle->pz());
+        pfCandE.push_back(particle->energy());
     }
 
 
@@ -310,6 +345,15 @@ MyAnalyzer::beginJob() {
     eventTree->Branch("pfJetPhotonEnergy", &pfJetPhotonEnergy);
     eventTree->Branch("pfJetElectronEnergy", &pfJetElectronEnergy);
     eventTree->Branch("pfJetMuonEnergy", &pfJetMuonEnergy);
+
+
+    eventTree->Branch("pfCandPt", &pfCandPt);
+    eventTree->Branch("pfCandEta", &pfCandEta);
+    eventTree->Branch("pfCandPhi", &pfCandPhi);
+    eventTree->Branch("pfCandPx", &pfCandPx);
+    eventTree->Branch("pfCandPy", &pfCandPy);
+    eventTree->Branch("pfCandPz", &pfCandPz);
+    eventTree->Branch("pfCandE", &pfCandE);
     
     eventTree->Branch("genJetPt", &genJetPt);
     eventTree->Branch("genJetEta", &genJetEta);
