@@ -9,7 +9,7 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 # File service
 process.load("CommonTools.UtilAlgos.TFileService_cfi")
-process.TFileService.fileName=cms.string("out.root")
+process.TFileService.fileName=cms.string("test.root")
 
 # load filelist
 fileList = FileUtils.loadListFromFile("filelist.txt")
@@ -24,7 +24,8 @@ process.demo = cms.EDAnalyzer('MyAnalyzer',
     ak4PFJets=cms.InputTag("ak4PFJets"),
     ak4PFJetsCHS=cms.InputTag("ak4PFJetsCHS"),
     ak4GenJets=cms.InputTag("ak4GenJets"),
-    genParticles=cms.InputTag("genParticles"))
+    genParticles=cms.InputTag("genParticles"),
+    particleFlow = cms.InputTag("particleFlow"))
 
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
