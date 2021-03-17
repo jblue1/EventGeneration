@@ -267,8 +267,8 @@ MyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     // loop through PF Candidates and save 4-momenta info
     for (reco::PFCandidateCollection::const_iterator particle=pfCandsH->begin(); particle != pfCandsH->end(); ++particle) {
         pfCandPt.push_back(particle->pt());
-        pfCandEta.push_back(particle->Eta());
-        pfCandPhi.push_back(particle->Phi());
+        pfCandEta.push_back(particle->eta());
+        pfCandPhi.push_back(particle->phi());
         pfCandPx.push_back(particle->px());
         pfCandPy.push_back(particle->py());
         pfCandPz.push_back(particle->pz());
